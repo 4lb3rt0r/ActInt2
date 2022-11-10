@@ -26,5 +26,12 @@ int main () {
         colonias.push_back(aux);
     }
 
+    for(int i = 0; i < colonias.size(); i++){
+        cout << "Nombre:" << colonias[i].nombre << endl;
+        cout << "x:" << colonias[i].x << endl;
+        cout << "y:" << colonias[i].y << endl;
+        cout << "Central:" << colonias[i].central << endl;
+    }
+
     return 0;
 }
