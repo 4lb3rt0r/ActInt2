@@ -10,20 +10,40 @@ struct Nodo {
     bool central;
 };
 
+struct Edge {
+    string from, to;
+    int cost;
+    Edge(string a, string b, int c){
+        from = a;
+        to = b;
+        cost = c;
+	}
+};
+
 
 int main () {
 
-    int n, m, k, q;
-    string nombre;
-    Nodo aux;
+    int n, m, k, q, c;
+    string nombre, a, b;
+    Nodo auxNodo;
     vector<Nodo> colonias;
+    vector<Edge> conexiones;
 
     cin >> n >> m >> k >> q;
 
     for (int i = 0; i < n; i++) {
-        cin >> aux.nombre >> aux.x >> aux.y >> aux.central;
 
-        colonias.push_back(aux);
+        cin >> auxNodo.nombre >> auxNodo.x >> auxNodo.y >> auxNodo.central;
+
+        colonias.push_back(auxNodo);
+    }
+
+    for (int i = 0; i < m; i++) {
+
+        cin >> a >> b >> c;
+        Edge auxEdge(a, b, c);
+
+        conexiones.push_back(auxEdge);
     }
 
     return 0;
