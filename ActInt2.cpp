@@ -29,6 +29,18 @@ void funcion1 () {
     cout << endl << "Costo total: 50" << endl << endl << "-------------------" << endl;
 }
 
+void funcion2 () {
+    // Formato de lo que debemos imprimir
+}
+
+void funcion3 () {
+    // Formato de lo que debemos imprimir
+}
+
+void funcion4 () {
+    // Formato de lo que debemos imprimir
+}
+
 void addConnection (string c1, string c2) {
     // Agregar la conexión con el nuevo cableado
 
@@ -66,12 +78,18 @@ int main () {
         // addConnection();
     }
     
+    funcion1();
+    funcion2();
+    funcion3();
+    
     for (int i = 0; i < q; i++) {
         cin >> colonia.nombre >> colonia.x >> colonia.y;
 
         colonia.central = 0;
 
         nuevasColonias.push_back(colonia);
+
+        funcion4();
     }
 
     return 0;
