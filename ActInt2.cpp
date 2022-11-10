@@ -46,5 +46,11 @@ int main () {
         conexiones.push_back(auxEdge);
     }
 
+    for(int i = 0; i < conexiones.size(); i++){
+        cout << "From: " << conexiones[i].from << endl;
+        cout << "To: " << conexiones[i].to << endl;
+        cout << "Cost: " << conexiones[i].cost << endl;
+    }
+
     return 0;
 }
