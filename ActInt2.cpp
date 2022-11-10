@@ -20,6 +20,15 @@ struct Edge {
 	}
 };
 
+void funcion1 () {
+    // Formato de lo que debemos imprimir
+}
+
+void addConnection (string c1, string c2) {
+    // Agregar la conexión con el nuevo cableado
+
+}
+
 
 int main () {
 
