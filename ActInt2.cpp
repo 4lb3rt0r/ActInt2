@@ -21,7 +21,12 @@ struct Edge {
 };
 
 void funcion1 () {
-    // Formato de lo que debemos imprimir
+    cout << "-------------------" << endl << "1 - Cableado óptimo de nueva conexión." << endl << endl;
+
+    for(int i = 0; i < 3; i++){
+        cout << "Colonia1 - Colonia2 10" << endl;
+    }
+    cout << endl << "Costo total: 50" << endl << endl << "-------------------" << endl;
 }
 
 void addConnection (string c1, string c2) {
@@ -60,7 +65,7 @@ int main () {
 
         // addConnection();
     }
-
+    
     for (int i = 0; i < q; i++) {
         cin >> colonia.nombre >> colonia.x >> colonia.y;
 
