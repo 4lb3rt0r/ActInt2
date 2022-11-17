@@ -4,8 +4,34 @@
 #include <climits>
 #include <cmath>
 #include <fstream>
+#include <algorithm>
+#include <unordered_set>
 
 using namespace std;
+
+struct Graph {
+    int V, E, costMSTPrim;
+
+    Graph(int V, int E){
+		this->V = V;
+		this->E = E;
+		adjList.resize(V);
+		costMSTPrim = 0;
+	}
+
+	vector<vector<pair<int, int>>> adjList; 	// Se utilza en Prim
+	vector<pair<pair<int,int>,int>> selectedEdgesP;		// Los arcos sel Prim;
+
+    void addEdge(string u, string v, int w, unordered_map<string,int> ordenCol){
+        adjList[ordenCol[u]].push_back({ordenCol[v],w});
+        adjList[ordenCol[v]].push_back({ordenCol[u],w});
+
+    }
+
+	void primMST();
+	void printEdgesP(vector<string> ordenColInv,ofstream & checking2);
+    void print(vector<string> ordenColInv);
+};
 
 struct Nodo {
     string nombre;
@@ -32,13 +58,16 @@ struct Edge {
 	}
 };
 
-void funcion1 (ofstream & checking2) {
+void funcion1 (ofstream & checking2, Graph & g, vector<string> & oci) {
     checking2 << "-------------------" << endl << "1 - Cableado óptimo de nueva conexión." << endl << endl;
+    
+    g.primMST();
 
-    for(int i = 0; i < 3; i++){
-        checking2 << "Colonia1 - Colonia2 10" << endl;
-    }
-    checking2 << endl << "Costo total: 50" << endl << endl << "-------------------" << endl;
+
+	g.printEdgesP(oci, checking2);
+
+    checking2 << "-------------------" << endl;
+    
 }
 
 void funcion2 () {
@@ -79,11 +108,62 @@ string whereToConnect (Nodo nuevaCol, vector<Nodo> col) {
     return closeNode.nombre;
 }
 
-void addConnection (string c1, string c2) {
-    // Agregar la conexión con el nuevo cableado
-
+// Complejidad: O(V^2)
+void Graph::primMST(){
+	int selSource = 0;
+	costMSTPrim = 0;
+	unordered_set<int> selected;
+	unordered_set<int> missing;
+	selected.insert(0);
+	for(int i = 1; i<V; i++){
+		missing.insert(i);
+	}
+	int conected = V - 1, minCost, selVertex;
+	while (conected) {
+		minCost = INT_MAX;
+		for (auto it:selected){
+			for (auto it2:adjList[it]){
+				if(missing.find(it2.first) != missing.end() && it2.second < minCost){
+					minCost = it2.second;
+					selVertex = it2.first;
+					selSource = it; 
+				}	
+			}
+		}
+		costMSTPrim += minCost;
+		selected.insert(selVertex);
+		missing.erase(selVertex);
+		selectedEdgesP.push_back({{selSource,selVertex},minCost});
+		conected--;
+	}
+	
 }
 
+    
+void Graph::printEdgesP(vector<string> ordenColInv, ofstream & checking2){
+
+    checking2 << endl;
+
+	for (auto it:selectedEdgesP){
+        
+        if(it.second != 0){
+		    checking2 << ordenColInv[it.first.first] << " - " << ordenColInv[it.first.second] << " " << it.second << endl;
+        }
+	}
+	checking2 << endl;
+    checking2 << "Costo Total: " << costMSTPrim << endl;
+}
+
+void Graph::print(vector<string> ordenColInv){
+	cout << "Adjacent List:" << endl;
+	for (int i=0; i<V; i++){
+		cout << " " << ordenColInv[i] << ": ";
+		for (int j=0; j<adjList[i].size(); j++){
+			cout << "(" << ordenColInv[adjList[i][j].first] << "," << adjList[i][j].second << ") ";
+		}
+		cout << endl;
+	}
+}
 
 int main () {
 
@@ -98,6 +178,9 @@ int main () {
 
     // Set para almacenar las colonias con un entero asignado para el uso en algoritmos
     unordered_map<string,int> ordenCol;
+    vector<string> ordenColInv;
+
+    Graph g(n,m);
 
     // Archivo de salida
     ofstream checking2("checking2.txt");
@@ -111,8 +194,9 @@ int main () {
 
         cin >> nombre >> x >> y >> central;
 
-        ordenCol[nombre] = i+1;
-        Nodo auxNodo(nombre, i+1, x, y, central);
+        ordenCol[nombre] = i;
+        ordenColInv.push_back(nombre);
+        Nodo auxNodo(nombre, i, x, y, central);
 
         colonias.push_back(auxNodo);
     }
@@ -126,6 +210,7 @@ int main () {
         Edge auxEdge(a, b, c);
 
         conexiones.push_back(auxEdge);
+        g.addEdge(a,b,c,ordenCol);
     }
 
     // Variables auxiliares para los nombres de las colonias con nuevas conexiones
@@ -134,10 +219,10 @@ int main () {
     for (int i = 0; i < k; i++) {
         cin >> c1 >> c2;
 
-        // addConnection();
+        g.addEdge(c1,c2,0,ordenCol);
     }
     
-    funcion1(checking2);
+    funcion1(checking2, g, ordenColInv);
     funcion2();
     funcion3();
     
@@ -151,7 +236,6 @@ int main () {
 
         checking2 << auxNodo.nombre << " debe conectarse con " << whereToConnect(auxNodo,colonias) << endl;
 
-        colonias.push_back(auxNodo);
     }
 
     checking2 << "-------------------" << endl;
