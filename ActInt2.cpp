@@ -140,11 +140,11 @@ bool notRepeat(int a, int b, vector<Exclude> &excluidos) {
         return true;
     }
     else {
-            for (int i = 0; i < excluidos.size(); i++) {
-        if (a != excluidos[i].b && b != excluidos[i].a) {
-            return true;
+        for (int i = 0; i < excluidos.size(); i++) {
+            if (a != excluidos[i].b && b != excluidos[i].a) {
+                return true;
+            }
         }
-    }
     }
     return false;
 }
