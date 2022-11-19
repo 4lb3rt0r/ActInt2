@@ -251,9 +251,7 @@ void Graph::primMST(){
 }
 
     
-void Graph::printEdgesP(vector<string> ordenColInv, ofstream & checking2){
-
-    checking2 << endl;
+void Graph::printEdgesP(vector<string> ordenColInv, ofstream & checking2) {
 
 	for (auto it:selectedEdgesP){
         
