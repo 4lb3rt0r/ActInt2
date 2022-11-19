@@ -9,6 +9,8 @@
 
 using namespace std;
 
+#define MAX 100
+
 struct Graph {
     int V, E, costMSTPrim;
 
@@ -50,12 +52,18 @@ struct Nodo {
 
 struct Edge {
     string from, to;
-    int cost;
-    Edge(string a, string b, int c){
+    int cost, fromN, toN;
+    Edge(string a, string b, int c, int d, int e){
         from = a;
         to = b;
         cost = c;
+        fromN = d;
+        toN = e;
 	}
+};
+
+struct Exclude {
+    int a, b;
 };
 
 void funcion1 (ofstream & checking2, Graph & g, vector<string> & oci) {
@@ -65,17 +73,120 @@ void funcion1 (ofstream & checking2, Graph & g, vector<string> & oci) {
 
 
 	g.printEdgesP(oci, checking2);
-
-    checking2 << "-------------------" << endl;
     
 }
 
-void funcion2 () {
+void funcion2 (ofstream & checking2) {
     // Formato de lo que debemos imprimir
+    checking2 << "-------------------" << endl << "2 - La ruta óptima." << endl << endl;
 }
 
-void funcion3 () {
+void leeArcos (int mat[MAX][MAX], int p[MAX][MAX], vector<Edge> &edges, int m) {
+    int a, b, c; // de Nodo a <-> b con costo
+    // Incialización de matriz
+    for (int i = 0; i < MAX; i++) {
+        mat[i][i] = 0;
+        p[i][i] = -1; // -1 significa Conexión Directa
+        for (int j = i + 1; j < MAX; j++){
+            mat[i][j] = mat[j][i] = INT_MAX; // INT_MAX = infinito
+            p[i][j] = p[j][i] = -1; // Significa que no existe un nodo intermedio
+        }
+    }
+    for (int i = 0; i < m; i++) {
+        //  Recordar que la base es 0 para los arreglos
+        // base1 para la entrada del programa
+        mat[edges[i].fromN][edges[i].toN] = mat[edges[i].toN][edges[i].fromN] = edges[i].cost;
+    }
+}
+
+// Complejidad: O(n^3)
+void floyd(int mat[MAX][MAX], int p[MAX][MAX], int n) {
+    for (int k = 0; k < n; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                /* Se comprueba que exista una conexión entre nodos corroborando que tanto
+                 mat[i][k] como mat[k][j] no contengan un valor infinito. Además, si la suma de los
+                 elementos contenidos en mat[i][k] y mat[k][j] es menor al valor contenido en mat[i][j],
+                 actualizamos el valor de mat[i][j] al de esta sumatoria. */
+                if (mat[i][k] != INT_MAX && mat[k][j] != INT_MAX && mat[i][k] + mat[k][j] < mat[i][j]) {
+                    mat[i][j] = mat[i][k] + mat[k][j];
+                    p[i][j] = k;
+                }
+            }
+        }
+    }
+}
+
+string getName(int index, vector<Nodo> &colonias) {
+    for (int i = 0; i < colonias.size(); i++) {
+        if (index == colonias[i].numero) {
+            return colonias[i].nombre;
+        }
+    }
+    return "";
+}
+
+int getIndex(string nombre, vector<Nodo> colonias) {
+    for (int i = 0; i < colonias.size(); i++) {
+        if (nombre == colonias[i].nombre) {
+            return colonias[i].numero;
+        }
+    }
+    return 0;
+}
+
+bool notRepeat(int a, int b, vector<Exclude> &excluidos) {
+    if (excluidos.empty()) {
+        return true;
+    }
+    else {
+            for (int i = 0; i < excluidos.size(); i++) {
+        if (a != excluidos[i].b && b != excluidos[i].a) {
+            return true;
+        }
+    }
+    }
+    return false;
+}
+
+void checaTrayectoria (ofstream & checking2, int p[MAX][MAX], int x, int y, vector<int> &centrales, vector<Nodo> &colonias) {
+    // Si la conexión no se trata de una conexión directa entre nodos (osea que sea una conexión de 2 nodos a -> b):
+    if (p[x][y] != -1) {
+        /* Desplegamos la trayectoria desde el inicia (a) hasta el número de 
+        en medio (p[x][y]) y desde ese número de en medio hasta el final (b)
+        */
+        checaTrayectoria(checking2, p, x, p[x][y], centrales, colonias);
+        checking2 << getName(p[x][y], colonias) << " - ";
+        checaTrayectoria(checking2, p, p[x][y], y, centrales, colonias);
+    }
+}
+
+void funcion3 (ofstream & checking2, int n, int m, vector<Edge> &edges, vector<int> &centrales, vector<Nodo> &colonias) {
     // Formato de lo que debemos imprimir
+    checking2 << "-------------------" << endl << "3 - Caminos más cortos entre centrales." << endl << endl;
+
+    Exclude excluido;
+    vector<Exclude> excluidos;
+
+    int mat[MAX][MAX], p[MAX][MAX];
+
+	leeArcos(mat, p, edges, m);
+	floyd(mat, p, n);
+
+    for (int i = 0; i < centrales.size(); i++) {
+        for (int j = 0; j < centrales.size(); j++) {
+            if (mat[centrales[i]][centrales[j]] != INT_MAX && mat[centrales[i]][centrales[j]] != 0 && notRepeat(centrales[i], centrales[j], excluidos)) {
+                    // Desplegamos el costo de la trayectoria y la misma trayectoria
+                    checking2 << getName(centrales[i], colonias) << " - ";
+                    checaTrayectoria(checking2, p, centrales[i], centrales[j], centrales, colonias);
+                    checking2 << getName(centrales[j], colonias) <<" (" << mat[centrales[i]][centrales[j]] << ")" << endl;
+
+                    excluido.a = centrales[i];
+                    excluido.b = centrales[j];
+                    excluidos.push_back(excluido);
+            }
+        }
+    }
 }
 
 // Complejidad: O(1)
@@ -176,6 +287,8 @@ int main () {
     vector<Nodo> colonias;
     vector<Edge> conexiones;
 
+    vector<int> centrales;
+
     // Set para almacenar las colonias con un entero asignado para el uso en algoritmos
     unordered_map<string,int> ordenCol;
     vector<string> ordenColInv;
@@ -194,6 +307,10 @@ int main () {
 
         cin >> nombre >> x >> y >> central;
 
+        if (central) {
+            centrales.push_back(i);
+        }
+
         ordenCol[nombre] = i;
         ordenColInv.push_back(nombre);
         Nodo auxNodo(nombre, i, x, y, central);
@@ -201,13 +318,18 @@ int main () {
         colonias.push_back(auxNodo);
     }
 
-    // Variables auxiliares para los nombres de los nodos conectados y su costo
+    // Variables auxiliares para los nombres de los nodos conectados, sus índices y su costo
     string a, b;
-    int c;
+    int c, d, e;
+    bool f;
 
     for (int i = 0; i < m; i++) {
         cin >> a >> b >> c;
-        Edge auxEdge(a, b, c);
+
+        d = getIndex(a, colonias);
+        e = getIndex(b, colonias);
+
+        Edge auxEdge(a, b, c, d, e);
 
         conexiones.push_back(auxEdge);
         g.addEdge(a,b,c,ordenCol);
@@ -223,11 +345,11 @@ int main () {
     }
     
     funcion1(checking2, g, ordenColInv);
-    funcion2();
-    funcion3();
+    funcion2(checking2);
+    funcion3(checking2, n, m, conexiones, centrales, colonias);
     
     // 4. Definir conexión de nuevas colonias
-    checking2 << "4 - Conexión de nuevas colonias." << endl << endl;
+    checking2 << "-------------------" << endl <<  "4 - Conexión de nuevas colonias." << endl << endl;
 
     for (int i = 0; i < q; i++) {
         cin >> nombre >> x >> y;
