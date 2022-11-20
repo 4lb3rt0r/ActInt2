@@ -52,7 +52,7 @@ struct Nodo {
 
 struct Edge {
     string from, to;
-    int cost, fromN, toN;
+    int cost;
     Edge(string a, string b, int c){
         from = a;
         to = b;
