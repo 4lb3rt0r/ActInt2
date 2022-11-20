@@ -273,8 +273,7 @@ int main () {
 
     // Variables auxiliares para los nombres de los nodos conectados, sus índices y su costo
     string a, b;
-    int c, d, e;
-    bool f;
+    int c;
 
     for (int i = 0; i < m; i++) {
         cin >> a >> b >> c;
