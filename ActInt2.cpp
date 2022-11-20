@@ -9,6 +9,8 @@
 
 using namespace std;
 
+#define MAX 100
+
 struct Graph {
     int V, E, costMSTPrim;
 
@@ -65,17 +67,81 @@ void funcion1 (ofstream & checking2, Graph & g, vector<string> & oci) {
 
 
 	g.printEdgesP(oci, checking2);
-
-    checking2 << "-------------------" << endl;
     
 }
 
-void funcion2 () {
+void funcion2 (ofstream & checking2) {
     // Formato de lo que debemos imprimir
+    checking2 << "-------------------" << endl << "2 - La ruta óptima." << endl << endl;
 }
 
-void funcion3 () {
+void leeArcos (int mat[MAX][MAX], int p[MAX][MAX], vector<Edge> &edges, int m, unordered_map<string, int> & ordenCol) {
+    int a, b, c; // de Nodo a <-> b con costo
+    // Incialización de matriz
+    for (int i = 0; i < MAX; i++) {
+        mat[i][i] = 0;
+        p[i][i] = -1; // -1 significa Conexión Directa
+        for (int j = i + 1; j < MAX; j++){
+            mat[i][j] = mat[j][i] = INT_MAX; // INT_MAX = infinito
+            p[i][j] = p[j][i] = -1; // Significa que no existe un nodo intermedio
+        }
+    }
+    for (int i = 0; i < m; i++) {
+        //  Recordar que la base es 0 para los arreglos
+        // base1 para la entrada del programa
+        mat[ordenCol[edges[i].from]][ordenCol[edges[i].to]] = mat[ordenCol[edges[i].to]][ordenCol[edges[i].from]] = edges[i].cost;
+    }
+}
+
+// Complejidad: O(n^3)
+void floyd(int mat[MAX][MAX], int p[MAX][MAX], int n) {
+    for (int k = 0; k < n; k++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                /* Se comprueba que exista una conexión entre nodos corroborando que tanto
+                 mat[i][k] como mat[k][j] no contengan un valor infinito. Además, si la suma de los
+                 elementos contenidos en mat[i][k] y mat[k][j] es menor al valor contenido en mat[i][j],
+                 actualizamos el valor de mat[i][j] al de esta sumatoria. */
+                if (mat[i][k] != INT_MAX && mat[k][j] != INT_MAX && mat[i][k] + mat[k][j] < mat[i][j]) {
+                    mat[i][j] = mat[i][k] + mat[k][j];
+                    p[i][j] = k;
+                }
+            }
+        }
+    }
+}
+
+void checaTrayectoria (ofstream & checking2, int p[MAX][MAX], int x, int y, vector<int> &centrales, vector<Nodo> &colonias, vector<string> & ordenColInv) {
+    // Si la conexión no se trata de una conexión directa entre nodos (osea que sea una conexión de 2 nodos a -> b):
+    if (p[x][y] != -1) {
+        /* Desplegamos la trayectoria desde el inicia (a) hasta el número de 
+        en medio (p[x][y]) y desde ese número de en medio hasta el final (b)
+        */
+        checaTrayectoria(checking2, p, x, p[x][y], centrales, colonias, ordenColInv);
+        checking2 << ordenColInv[p[x][y]] << " - ";
+        checaTrayectoria(checking2, p, p[x][y], y, centrales, colonias, ordenColInv);
+    }
+}
+
+void funcion3 (ofstream & checking2, int n, int m, vector<Edge> &edges, vector<int> &centrales, vector<Nodo> &colonias, vector<string> & ordenColInv, unordered_map<string, int> & ordenCol) {
     // Formato de lo que debemos imprimir
+    checking2 << "-------------------" << endl << "3 - Caminos más cortos entre centrales." << endl << endl;
+
+    int mat[MAX][MAX], p[MAX][MAX];
+
+	leeArcos(mat, p, edges, m, ordenCol);
+	floyd(mat, p, n);
+
+    for (int i = 0; i < centrales.size(); i++) {
+        for (int j = i+1; j < centrales.size(); j++) {
+            if (mat[centrales[i]][centrales[j]] != INT_MAX) {
+                    // Desplegamos el costo de la trayectoria y la misma trayectoria
+                    checking2 << ordenColInv[centrales[i]] << " - ";
+                    checaTrayectoria(checking2, p, centrales[i], centrales[j], centrales, colonias, ordenColInv);
+                    checking2 << ordenColInv[centrales[j]] <<" (" << mat[centrales[i]][centrales[j]] << ")" << endl;
+            }
+        }
+    }
 }
 
 // Complejidad: O(1)
@@ -140,9 +206,7 @@ void Graph::primMST(){
 }
 
     
-void Graph::printEdgesP(vector<string> ordenColInv, ofstream & checking2){
-
-    checking2 << endl;
+void Graph::printEdgesP(vector<string> ordenColInv, ofstream & checking2) {
 
 	for (auto it:selectedEdgesP){
         
@@ -176,6 +240,8 @@ int main () {
     vector<Nodo> colonias;
     vector<Edge> conexiones;
 
+    vector<int> centrales;
+
     // Set para almacenar las colonias con un entero asignado para el uso en algoritmos
     unordered_map<string,int> ordenCol;
     vector<string> ordenColInv;
@@ -194,6 +260,10 @@ int main () {
 
         cin >> nombre >> x >> y >> central;
 
+        if (central) {
+            centrales.push_back(i);
+        }
+
         ordenCol[nombre] = i;
         ordenColInv.push_back(nombre);
         Nodo auxNodo(nombre, i, x, y, central);
@@ -201,12 +271,13 @@ int main () {
         colonias.push_back(auxNodo);
     }
 
-    // Variables auxiliares para los nombres de los nodos conectados y su costo
+    // Variables auxiliares para los nombres de los nodos conectados, sus índices y su costo
     string a, b;
     int c;
 
     for (int i = 0; i < m; i++) {
         cin >> a >> b >> c;
+
         Edge auxEdge(a, b, c);
 
         conexiones.push_back(auxEdge);
@@ -223,11 +294,11 @@ int main () {
     }
     
     funcion1(checking2, g, ordenColInv);
-    funcion2();
-    funcion3();
+    funcion2(checking2);
+    funcion3(checking2, n, m, conexiones, centrales, colonias, ordenColInv, ordenCol);
     
     // 4. Definir conexión de nuevas colonias
-    checking2 << "4 - Conexión de nuevas colonias." << endl << endl;
+    checking2 << "-------------------" << endl <<  "4 - Conexión de nuevas colonias." << endl << endl;
 
     for (int i = 0; i < q; i++) {
         cin >> nombre >> x >> y;
