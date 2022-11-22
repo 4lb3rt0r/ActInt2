@@ -6,6 +6,7 @@
 #include <fstream>
 #include <algorithm>
 #include <unordered_set>
+#include <queue>
 
 using namespace std;
 
@@ -33,6 +34,18 @@ struct Graph {
 	void primMST();
 	void printEdgesP(vector<string> ordenColInv,ofstream & checking2);
     void print(vector<string> ordenColInv);
+};
+
+struct Node {
+    int niv; // Nivel del nodo dentro del árbol de búsq. soluciones
+    int costoAcum; // Costo acumulado hasta ese punto
+    int costoPos; // Costo posible de esta trayectoria
+    int verticeAnterior;
+    int verticeActual;
+    bool visitados[MAX] = {false};
+    bool operator<(const Node &otro) const { // Para que la fila priorizada tenga prioridad
+        return costoPos >= otro.costoPos; // Menor costo posible
+    }
 };
 
 struct Nodo {
@@ -76,12 +89,144 @@ void funcion1 (ofstream & checking2, Graph & g, vector<string> & oci) {
     
 }
 
-void funcion2 (ofstream & checking2) {
-    // Formato de lo que debemos imprimir
-    checking2 << "-------------------" << endl << "2 - La ruta óptima." << endl << endl;
+void calculaCostoPosible (Node &nodoActual, int matAdj[MAX][MAX], int n) {
+    nodoActual.costoPos = nodoActual.costoAcum;
+    int costoObtenido;
+
+    for (int i = 1; i <= n; i++) {
+        // No he visitado al nodo i o es el último que visité
+        costoObtenido = INT_MAX;
+        if (!nodoActual.visitados[i] || i == nodoActual.verticeActual) {
+            if (!nodoActual.visitados[i]) { // Al nodo i no lo he visitado
+                for (int j = 1; j <= n; j++) {
+                    if (i != j && (!nodoActual.visitados[j] || j == 1)) {
+                        costoObtenido = min(costoObtenido, matAdj[i][j]);
+                    }
+                }
+            }
+            else { // El nodo i es el último visitado
+                for (int j = 1; j <= n; j++) {
+                    if (!nodoActual.visitados[j]) {
+                        costoObtenido = min(costoObtenido, matAdj[i][j]);
+                    }
+                }
+            }
+            if (costoObtenido == INT_MAX) {
+                nodoActual.costoPos = INT_MAX;
+            }
+            else {
+                nodoActual.costoPos += costoObtenido;
+            }
+        }
+
+    }
 }
 
-void leeArcos (int mat[MAX][MAX], int p[MAX][MAX], vector<Edge> &edges, int m) {
+// Complejidad: O(2^n)
+int tsp (int matAdj[MAX][MAX], int n) {
+    int costoOptimo = INT_MAX;
+    Node raiz;
+    raiz.niv = 0;
+    raiz.costoAcum = 0;
+    raiz.verticeActual = 1;
+    raiz.verticeAnterior = 0;
+    raiz.visitados[1] = true;
+    calculaCostoPosible(raiz, matAdj, n);
+    priority_queue<Node> pq;
+    pq.push(raiz);
+
+    while (!pq.empty()) {
+        // Sacar de pq;
+        Node u = pq.top();
+        pq.pop();
+        // ver si el CostoPos < CostoOptimo
+        if (u.costoPos < costoOptimo) {
+            // SI, generar todos los posibles hijos de este nodo
+            // Para cada hijo generar un nuevo nodo, actualizar los datos
+            for (int i = 1; i <= n; i++) {
+                if (!u.visitados[i]) {
+                    Node son;
+                    son.niv = u.niv + 1;
+                    son.costoAcum = u.costoAcum + matAdj[u.verticeActual][i];
+                    son.verticeActual = i;
+                    son.verticeAnterior = u.verticeActual;
+                    copy(begin(u.visitados), end(u.visitados), begin(son.visitados));
+                    son.visitados[i] = true;
+
+                    if (son.costoAcum < 0) {
+                        son.costoAcum = INT_MAX;
+                    }
+
+                    calculaCostoPosible(son, matAdj, n);
+
+                    if (son.costoPos < 0) {
+                        son.costoPos = INT_MAX;
+                    }
+
+                    // y cuando el nivel == n - 2 (nodo hoja), calcular el costo real
+                    if (son.niv == n - 2 && son.costoPos < costoOptimo) {
+                        costoOptimo = son.costoPos;
+                    }
+                    // Si el nivel < n - 2 .... checar si el costo posible es mejor
+                    // que el costo optimo y lo metes a la pq.
+                    if (son.niv < n - 2 && son.costoPos < costoOptimo) {
+                        pq.push(son);
+                    }
+                }
+            }
+        }
+    }
+    return costoOptimo;
+}
+
+void iniciaMat (int matAdj[MAX][MAX]) {
+    for (int i = 0; i < MAX; i++) {
+        matAdj[i][i] = 0;
+        for (int j = i + 1; j < MAX; j++) {
+            matAdj[i][j] = matAdj[j][i] = INT_MAX;
+        }
+    }
+}
+
+void leeArcosTSP (int matAdj[MAX][MAX], int m, vector<Edge> &edges) {
+    for (int i = 0; i < m; i++) {
+        matAdj[edges[i].fromN + 1][edges[i].toN + 1] = matAdj[edges[i].toN + 1][edges[i].fromN + 1] = edges[i].cost;
+    }
+}
+
+void print(int matAdj[MAX][MAX], int n) {
+    for (int i = 0; i <= n; i++) {
+        for (int j = 0; j <= n; j++) {
+            if (matAdj[i][j] != INT_MAX) {
+                cout << matAdj[i][j] << " ";
+            }
+            else {
+                cout << "INF" << " ";
+            }
+        }
+        cout << endl;
+    }
+    cout << endl;
+}
+
+void funcion2 (ofstream & checking2, int n, int m, vector<Edge> &edges) {
+    checking2 << "-------------------" << endl << "2 - La ruta óptima." << endl << endl;
+
+    int matAdj[MAX][MAX];
+
+    iniciaMat(matAdj);
+    leeArcosTSP(matAdj, m, edges);
+    print(matAdj, n);
+
+    if (tsp(matAdj, n) != INT_MAX) {
+        checking2 << tsp(matAdj, n) << endl;
+    }
+    else {
+        checking2 << "INF" << endl;
+    }
+}
+
+void leeArcosFloyd (int mat[MAX][MAX], int p[MAX][MAX], vector<Edge> &edges, int m) {
     int a, b, c; // de Nodo a <-> b con costo
     // Incialización de matriz
     for (int i = 0; i < MAX; i++) {
@@ -170,7 +315,7 @@ void funcion3 (ofstream & checking2, int n, int m, vector<Edge> &edges, vector<i
 
     int mat[MAX][MAX], p[MAX][MAX];
 
-	leeArcos(mat, p, edges, m);
+	leeArcosFloyd(mat, p, edges, m);
 	floyd(mat, p, n);
 
     for (int i = 0; i < centrales.size(); i++) {
@@ -343,7 +488,7 @@ int main () {
     }
     
     funcion1(checking2, g, ordenColInv);
-    funcion2(checking2);
+    funcion2(checking2, n, m, conexiones);
     funcion3(checking2, n, m, conexiones, centrales, colonias);
     
     // 4. Definir conexión de nuevas colonias
