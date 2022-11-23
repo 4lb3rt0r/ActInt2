@@ -294,36 +294,14 @@ pair<vector<int>,int> tsp(int mat[MAX][MAX], int n, ofstream & checking2, vector
                     // Cuando el nivel sea n-1 calcular costo real
                     if (noCentralesVisitados(nuevo.visitados, nocentrales)){
                         // El costo real solo se calcula si existe el camino entre el nodo actual y el que falta y el que falta y el primero
-                        if (mat[i][primero] != INT_MAX)
+                        if (mat[i][primero] != INT_MAX && nuevo.verAnt != primero)
                         {
                             costoR = nuevo.costoA + mat[i][primero];
                             // costoReal mejor que costoOptimo, actualizar
                             if (costoR < costoOpt) {
                                 costoOpt = costoR;
-                                nuevo.ruta.push_back(primero);
                                 rutaOpt = nuevo.ruta;
                             }
-                        }
-                    }
-                    if (nuevo.nivel == n-1) {
-                        int j = 0;
-                        // Esto es para obtener el nodo que falta
-                        while (nuevo.visitados[j])
-                        {
-                            j++;
-                        }
-                        // El costo real solo se calcula si existe el camino entre el nodo actual y el que falta y el que falta y el primero
-                        if (mat[i][j] != INT_MAX && mat[j][primero] != INT_MAX)
-                        {
-                            costoR = nuevo.costoA + mat[i][j] + mat[j][primero];
-                            // costoReal mejor que costoOptimo, actualizar
-                            if (costoR < costoOpt) {
-                                costoOpt = costoR;
-                                nuevo.ruta.push_back(j);
-                                nuevo.ruta.push_back(primero);
-                                rutaOpt = nuevo.ruta;
-                            }
-
                         }
                     }
                     // Si el nivel < n-2 checar si costo posible es mejor e introducirlo a pq
@@ -333,9 +311,10 @@ pair<vector<int>,int> tsp(int mat[MAX][MAX], int n, ofstream & checking2, vector
                 }
             }
         }
-        
        
     }
+
+    rutaOpt.push_back(primero);
 
     return {rutaOpt,costoOpt};
 }
@@ -347,45 +326,40 @@ void cicloNoCentral (ofstream & checking2, int n, int m, vector<Edge> conexiones
     // Formato de lo que debemos imprimir
     checking2 << "-------------------" << endl << "2 - La ruta óptima." << endl << endl;
 
-    vector<pair<vector<int>, int>> resultados;
-    
-    int mat[MAX][MAX];
+    if(!nocentrales.empty()){
 
-    iniciaMat(mat,m, conexiones, ordenCol);
+        vector<pair<vector<int>, int>> resultados;
+        
+        int mat[MAX][MAX];
 
-    
-    for(int i : nocentrales){
-        resultados.push_back(tsp(mat, n, checking2,nocentrales, ordenColInv,i));
-    }
+        iniciaMat(mat,m, conexiones, ordenCol);
 
-    vector<int> rutaOpt;
-    int costoOpt = INT_MAX;
-
-    for (int i = 0; i < resultados.size(); i++)
-    {
-        if (costoOpt > resultados[i].second)
-        {
-            rutaOpt = resultados[i].first;
-            costoOpt = resultados[i].second;
+        
+        for(int i : nocentrales){
+            resultados.push_back(tsp(mat, n, checking2,nocentrales, ordenColInv,i));
         }
 
-        /*for (int j = 0; j < resultados[i].first.size()-1; j++)
+        vector<int> rutaOpt;
+        int costoOpt = INT_MAX;
+
+        for (int i = 0; i < resultados.size(); i++)
         {
-            cout << ordenColInv[resultados[i].first[j]] << " - ";
+            if (costoOpt > resultados[i].second)
+            {
+                rutaOpt = resultados[i].first;
+                costoOpt = resultados[i].second;
+            }
         }
-        cout << ordenColInv[resultados[i].first[resultados[i].first.size()-1]] << endl << endl;
+        
+        for (int j = 0; j < rutaOpt.size()-1; j++)
+        {
+            checking2 << ordenColInv[rutaOpt[j]] << " - ";
+        }
+        checking2 << ordenColInv[rutaOpt[rutaOpt.size()-1]] << endl << endl;
 
-        cout << "La Ruta Óptima tiene un costo total de: " << resultados[i].second << endl << endl;*/
+        checking2 << "La Ruta Óptima tiene un costo total de: " <<  costoOpt << endl << endl;
+
     }
-    
-    for (int j = 0; j < rutaOpt.size()-1; j++)
-    {
-        checking2 << ordenColInv[rutaOpt[j]] << " - ";
-    }
-    checking2 << ordenColInv[rutaOpt[rutaOpt.size()-1]] << endl << endl;
-
-    checking2 << "La Ruta Óptima tiene un costo total de: " <<  costoOpt << endl << endl;
-
 }
 
 // Funciones auxiliares 3
