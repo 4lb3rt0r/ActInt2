@@ -1,3 +1,11 @@
+/* Análisis y Diseño de Algoritmos Avanzados
+Profesor: Luis Humberto González Guerra
+Alumnos: Daniel Evaristo Escalera Bonilla
+Daniel Evaristo Escalera Bonilla, Alberto Horacio Orozco Ramos, Andrés Aguirre Rodríguez
+Matrículas: A00831289, A00831719, A01284373
+Fecha: 23/Noviembre/2022
+Evidencia 2. Actividad Integradora 2*/
+
 #include <iostream>
 #include <vector>
 #include <unordered_map>
