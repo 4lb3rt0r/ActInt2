@@ -1,7 +1,6 @@
 /* Análisis y Diseño de Algoritmos Avanzados
 Profesor: Luis Humberto González Guerra
-Alumnos: Daniel Evaristo Escalera Bonilla
-Daniel Evaristo Escalera Bonilla, Alberto Horacio Orozco Ramos, Andrés Aguirre Rodríguez
+Alumnos: Daniel Evaristo Escalera Bonilla, Alberto Horacio Orozco Ramos, Andrés Aguirre Rodríguez
 Matrículas: A00831289, A00831719, A01284373
 Fecha: 23/Noviembre/2022
 Evidencia 2. Actividad Integradora 2*/
@@ -34,7 +33,7 @@ struct Graph {
 	}
 
 	vector<vector<pair<int, int>>> adjList; 	// Se utilza en Prim
-	vector<pair<pair<int,int>,int>> selectedEdgesP;		// Los arcos sel Prim;
+	vector<pair<pair<int,int>,int>> selectedEdgesP;		// Los arcos del Prim;
 
     void addEdge(string u, string v, int w, unordered_map<string,int> ordenCol){
         adjList[ordenCol[u]].push_back({ordenCol[v],w});
@@ -47,7 +46,7 @@ struct Graph {
     void print(vector<string> ordenColInv);
 };
 
-// Nodo modificaado para tsp
+// Nodo modificado para tsp
 
 struct NodoTSP {
     int costoP = 0;
